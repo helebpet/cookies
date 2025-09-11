@@ -13,7 +13,7 @@ function setup() {
     canvas.parent('p5-container');  // Attach canvas to HTML container
     
     // Set default font to Azeret Mono (loaded via Google Fonts)
-    textFont('Azeret Mono, monospace');
+    textFont('Azeret Mono');
     
     console.log("Canvas initialized:", windowWidth + "x" + windowHeight);
 }
