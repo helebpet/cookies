@@ -10,15 +10,15 @@ let titleFont = 'albert-sans, sans-serif';
 let buttonFont = 'albert-sans, sans-serif';
 
 function setup() {
-  console.log("P5.js setup starting...");
+  console.log("P5.2js setup starting...");
   
   // Create canvas with full window dimensions
   let canvas = createCanvas(windowWidth, windowHeight);
   
   // Attach canvas to the main container
-  canvas.parent('p5-container');
-  
+  canvas.parent('p5.2-container');
   console.log("Canvas created:", windowWidth + "x" + windowHeight);
+  textFont('Azeret Mono');
 }
 
 function draw() {
