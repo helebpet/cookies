@@ -329,12 +329,13 @@ function mousePressed() {
     let buttonY = bannerY + bannerHeight - buttonHeight - padding;
     
     // Check Accept All button click
-    if (mouseX >= button2X && mouseX <= button2X + buttonWidth &&
-        mouseY >= buttonY && mouseY <= buttonY + buttonHeight) {
-        console.log("✅ Cookies accepted!");
-        freeButton = null;                                   // Remove escaped button
-        showOriginalManage = true;                           // Restore original button
-    }
+if (mouseX >= button2X && mouseX <= button2X + buttonWidth &&
+    mouseY >= buttonY && mouseY <= buttonY + buttonHeight) {
+    console.log("✅ Cookies accepted!");
+    window.location.href = "camera.html";  // Redirect to camera.html
+    freeButton = null;                                   // Remove escaped button
+    showOriginalManage = true;                           // Restore original button
+}
     
     // Check if escaped button was clicked (challenging due to movement)
     if (freeButton) {
