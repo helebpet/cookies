@@ -2,6 +2,9 @@ let capture;
         
         function setup() {
             createCanvas(windowWidth, windowHeight);
+
+            let canvas = createCanvas(windowWidth, windowHeight);
+            canvas.parent('p5-container');  // Attach canvas to HTML container
             
             // Create camera capture
             capture = createCapture(VIDEO);
