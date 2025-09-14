@@ -45,14 +45,3 @@ main {
   width: 100%;
   height: 100%;
 }
-
-/* Make canvas background transparent */
-canvas {
-  background: transparent !important;
-  display: block;
-}
-
-/* Add this class to enable p5.js interactions when needed */
-.interactive {
-  pointer-events: auto;
-}
