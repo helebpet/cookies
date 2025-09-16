@@ -79,9 +79,9 @@ function draw() {
     textSize(titleSize);            // Apply calculated title size
     textStyle(BOLD);                // Bold font weight for emphasis
     
-    // Wrap title text to fit within available width
+    // Smart title wrapping to ensure exactly 2 lines with no widows/orphans
     let titleText = "WE USE COOKIES TO IMPROVE YOUR EXPERIENCE!";
-    let titleLines = wrapText(titleText, textMaxWidth + 20, titleSize);
+    let titleLines = wrapTitleSmartly(titleText, textMaxWidth + 20, titleSize);
     
     // Render each line of wrapped title text
     for (let i = 0; i < titleLines.length; i++) {
@@ -177,29 +177,32 @@ function draw() {
         console.log("Manage Settings button escaped!");     // Log escape event
     }
     
+    // CONSISTENT BUTTON STYLING - Calculate uniform button text size
+    let buttonTextSize = min(buttonWidth * 0.13, 16);       // Consistent text size for both buttons
+    
     // Draw original Manage Settings button (when not escaped)
     if (showOriginalManage) {
         fill(220);                                           // Light gray background
         noStroke();                                          // No border
         rect(button1X, buttonY, buttonWidth, buttonHeight); // Button rectangle
         
-        // Draw button text
+        // Draw button text with consistent styling
         fill(0);                                             // Black text
         textAlign(CENTER);                                   // Center text in button
-        textSize(min(buttonWidth * 0.13, 16));              // Responsive text size
+        textSize(buttonTextSize);                           // Use consistent text size
         textStyle(BOLD);                                     // Bold font weight
         text("Manage Settings", button1X + buttonWidth/2, buttonY + buttonHeight/2 + 6); // Centered text
     }
     
-    // Draw Accept All button (always remains stationary)
+    // Draw Accept All button with matching styling
     fill(34, 139, 34);                                      // Forest green background
     noStroke();                                              // No border
     rect(button2X, buttonY, buttonWidth, buttonHeight);     // Button rectangle
     
-    // Draw Accept All button text
+    // Draw Accept All button text with consistent styling
     fill(255);                                               // White text for contrast
     textAlign(CENTER);                                       // Center text in button
-    textSize(min(buttonWidth * 0.15, 18));                 // Slightly larger text size
+    textSize(buttonTextSize);                               // Same text size as other button
     textStyle(BOLD);                                         // Bold font weight
     text("Accept All", button2X + buttonWidth/2, buttonY + buttonHeight/2 + 6); // Centered text
     
@@ -293,15 +296,73 @@ function drawFreeButton(btn) {
     noStroke();                                              // No border outline
     rect(btn.x - btn.width/2, btn.y - btn.height/2, btn.width, btn.height); // Centered rectangle
     
+    // CONSISTENT ESCAPED BUTTON STYLING
+    let buttonTextSize = min(btn.width * 0.13, 16);         // Use same calculation as static buttons
+    
     // Draw button text with consistent sizing
     fill(0);                                                 // Black text color
     textAlign(CENTER);                                       // Center text alignment
-    textSize(14);                                           // Same fixed text size
+    textSize(buttonTextSize);                               // Same text size as static buttons
     textStyle(BOLD);                                         // Bold font weight
-    text("Manage Settings", btn.x, btn.y + 5);              // Draw text at button center with vertical offset
+    text("Manage Settings", btn.x, btn.y + 6);              // Draw text at button center with vertical offset
 }
 
 // ==================== TEXT PROCESSING UTILITIES ====================
+
+/**
+ * Smart title wrapping that ensures exactly 2 lines with no widows/orphans
+ * Forces at least 2 words on the second line
+ * @param {string} txt - Input title text to be wrapped
+ * @param {number} maxWidth - Maximum pixel width for each line
+ * @param {number} fontSize - Font size for accurate width calculation
+ * @returns {Array} Array of exactly 2 wrapped title lines
+ */
+function wrapTitleSmartly(txt, maxWidth, fontSize) {
+    let words = txt.split(' ');
+    textSize(fontSize);
+    
+    // If we can fit everything on one line, force a split anyway for 2-line requirement
+    if (textWidth(txt) <= maxWidth) {
+        // Find a good split point - aim for roughly equal distribution
+        let midPoint = Math.floor(words.length / 2);
+        
+        // Adjust to ensure at least 2 words on second line
+        if (words.length - midPoint < 2) {
+            midPoint = words.length - 2;
+        }
+        
+        let line1 = words.slice(0, midPoint).join(' ');
+        let line2 = words.slice(midPoint).join(' ');
+        
+        return [line1, line2];
+    }
+    
+    // Find the best split point that fits within width constraints
+    // and ensures at least 2 words on the second line
+    let bestSplit = -1;
+    
+    for (let i = 1; i < words.length - 1; i++) { // Start at 1, end before last word to ensure 2+ words remain
+        let line1 = words.slice(0, i).join(' ');
+        let line2 = words.slice(i).join(' ');
+        
+        // Check if both lines fit and second line has at least 2 words
+        if (textWidth(line1) <= maxWidth && 
+            textWidth(line2) <= maxWidth && 
+            words.slice(i).length >= 2) {
+            bestSplit = i;
+        }
+    }
+    
+    // If no good split found, use fallback
+    if (bestSplit === -1) {
+        bestSplit = Math.max(1, words.length - 2); // Ensure at least 2 words on second line
+    }
+    
+    let line1 = words.slice(0, bestSplit).join(' ');
+    let line2 = words.slice(bestSplit).join(' ');
+    
+    return [line1, line2];
+}
 
 /**
  * Break text into lines that fit within specified pixel width
@@ -389,7 +450,7 @@ function mousePressed() {
     let padding = bannerWidth * 0.08;
     let titleSize = min(width * 0.04, 32);
     let titleText = "WE USE COOKIES TO IMPROVE YOUR EXPERIENCE!";
-    let titleLines = ["WE USE COOKIES TO", "IMPROVE YOUR EXPERIENCE!"]; // Force exactly 2 lines
+    let titleLines = wrapTitleSmartly(titleText, bannerWidth - (padding * 2) + 20, titleSize);
     let titleHeight = titleLines.length * titleSize * 1.2;
     let textAreaY = bannerY + padding + titleSize + titleHeight + 10;
     let buttonHeight = max(40, bannerHeight * 0.12);
@@ -412,7 +473,7 @@ function mousePressed() {
     let buttonY = bannerY + bannerHeight - buttonHeight - padding;
     
     // Check if Accept All button was clicked
-    if (mouseX >= button2X && mouseX <= button2X + uniformButtonWidth &&
+    if (mouseX >= button2X && mouseX <= button2X + buttonWidth &&
         mouseY >= buttonY && mouseY <= buttonY + buttonHeight) {
         console.log("✅ Cookies accepted!");                // Log acceptance
         window.location.href = "camera.html";               // Navigate to camera page
