@@ -13,8 +13,7 @@
 // - Responsive layout calculations
 // - Mouse interaction and drag scrolling features
 // - Button styling consistency and content-based sizing
-// The core creative vision, artistic concept, and overall design 
-// were developed independently by the student.
+// The core creative vision, artistic concept, and overall design were developed independently by the student.
 // 
 // STUDENT'S ORIGINAL CREATIVE IDEAS:
 // - Making the "Manage Settings" button disappear and move freely to escape the mouse cursor
@@ -107,7 +106,7 @@ function draw() {
     textStyle(NORMAL);              // Remove bold formatting for body text
     textSize(bodySize);             // Set body text size
     
-    // Long cookie policy text (intentionally verbose for artistic effect)
+    // Long cookie policy text to be displayed in scrollable area
     let bodyText = "We and our trusted partners use cookies and similar technologies to enhance your browsing experience, analyze site traffic, and deliver personalized content and advertisements. These essential tools help us understand how you interact with our website, remember your preferences, and provide you with relevant offers tailored to your interests. By continuing to use this site, you consent to our collection of data including your location, device information, browsing history, and interaction patterns, which may be shared with third-party vendors for analytics, marketing, and service improvement purposes. We are committed to protecting your privacy while delivering the best possible user experience through data-driven personalization.";
     
     // Process text for scrollable display

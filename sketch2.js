@@ -14,8 +14,7 @@
 // - Implementation of getSeparatorX() function for layout positioning
 // - Implementation of eye tracking mouse movement functionality in drawInteractiveFace()
 // - Layout assistance based on student's Figma design mockups
-// The core creative vision, artistic concept, and overall design 
-// were developed independently by the student.
+// The core creative vision, artistic concept, and overall design were developed independently by the student.
 
 // EXTERNAL CODE SOURCES:
 // The duotone function was found online in a Google AI Overview 
