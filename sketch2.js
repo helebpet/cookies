@@ -3,7 +3,7 @@
 // Created: September 13, 2025
 
 // AI ASSISTANCE ACKNOWLEDGMENT:
-// Claude AI (Anthropic) was used on 09/13/2025 to help with:
+// ChatGPT (OpenAI) and Claude AI (Anthropic) were used between 09/06/2025 and 09/15/2025 to help with:
 // - Code commenting and documentation
 // - Proper source citation formatting
 // - Code organization suggestions
@@ -45,7 +45,7 @@ let surveillanceMessages = [
 ];
 
 let currentMessageIndex = -1; // Start at -1 so no messages show initially
-let messageTimer = 0; // Counter that increments each frame to control message timing
+let lastMessageTime = 0; // Timestamp when last message was shown
 let blinkTimer = 0; // Counter for controlling the automatic blinking animation of the interactive face
 let isBlinking = false; // Boolean flag to track whether the face is currently in blink state
 let mouseHasMoved = false; // Track if mouse has moved to trigger first message
@@ -276,13 +276,12 @@ function drawSurveillanceText() {
     if (mouseHasMoved && currentMessageIndex < 0) {
         // Start showing messages when mouse moves
         currentMessageIndex = 0;
-        messageTimer = 0;
+        lastMessageTime = millis();
     } else if (currentMessageIndex >= 0 && currentMessageIndex < 5) {
         // Progress through first 5 messages normally (indices 0-4)
-        messageTimer++;
-        if (messageTimer > 300) { // 5 seconds delay
+        if (millis() - lastMessageTime > 2000) { // 2 seconds delay
             currentMessageIndex++;
-            messageTimer = 0;
+            lastMessageTime = millis(); // Record when this message was shown
         }
     } else if (currentMessageIndex === 5) {
         // Show "click anywhere" message and wait for click
