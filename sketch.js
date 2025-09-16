@@ -67,8 +67,7 @@ function draw() {
     rect(bannerX, bannerY, bannerWidth, bannerHeight); // Main modal container
     
     // Calculate responsive text sizes based on banner dimensions
-    // Adjusted title size calculation to ensure it fits on exactly 2 lines
-    let titleSize = min(width * 0.028, 24);    // Reduced title font size for better line fitting
+    let titleSize = min(width * 0.04, 32);     // Title font size: 4% of width, max 32px
     let bodySize = min(width * 0.02, 16);      // Body font size: 2% of width, max 16px
     let padding = bannerWidth * 0.08;          // Internal padding: 8% of banner width
     let textMaxWidth = bannerWidth - (padding * 2) - 20; // Available width for text (minus scrollbar)
@@ -80,17 +79,9 @@ function draw() {
     textSize(titleSize);            // Apply calculated title size
     textStyle(BOLD);                // Bold font weight for emphasis
     
-    // Wrap title text to fit within available width - optimized for 2 lines
+    // Wrap title text to fit within available width
     let titleText = "WE USE COOKIES TO IMPROVE YOUR EXPERIENCE!";
     let titleLines = wrapText(titleText, textMaxWidth + 20, titleSize);
-    
-    // Force title to exactly 2 lines by adjusting if needed
-    if (titleLines.length > 2) {
-        // If more than 2 lines, reduce font size and recalculate
-        titleSize = titleSize * 0.85;
-        textSize(titleSize);
-        titleLines = wrapText(titleText, textMaxWidth + 20, titleSize);
-    }
     
     // Render each line of wrapped title text
     for (let i = 0; i < titleLines.length; i++) {
@@ -157,13 +148,13 @@ function draw() {
         rect(scrollBarX, thumbY, 8, thumbHeight);           // Thumb rectangle
     }
     
-    // Calculate button layout with proper padding (two centered buttons)
-    let buttonWidth = bannerWidth * 0.35;                   // Increased to 35% for better proportions
+    // Calculate button layout (two centered buttons)
+    let buttonWidth = bannerWidth * 0.3;                    // Each button: 30% of banner width
     let buttonSpacing = 20;                                  // Fixed 20px gap between buttons
     let totalButtonWidth = (buttonWidth * 2) + buttonSpacing; // Total width of button group
     let button1X = bannerX + (bannerWidth - totalButtonWidth) / 2; // Center the button group
     let button2X = button1X + buttonWidth + buttonSpacing;  // Position second button
-    let buttonY = bannerY + bannerHeight - buttonHeight - padding; // Bottom of banner with proper padding
+    let buttonY = bannerY + bannerHeight - buttonHeight - padding; // Bottom of banner
     
     // Check mouse proximity to original manage settings button for escape behavior
     let distanceToOriginalManage = dist(mouseX, mouseY, button1X + buttonWidth/2, buttonY + buttonHeight/2);
@@ -186,31 +177,31 @@ function draw() {
         console.log("Manage Settings button escaped!");     // Log escape event
     }
     
-    // Draw original Manage Settings button (when not escaped) with proper padding
+    // Draw original Manage Settings button (when not escaped)
     if (showOriginalManage) {
         fill(220);                                           // Light gray background
         noStroke();                                          // No border
         rect(button1X, buttonY, buttonWidth, buttonHeight); // Button rectangle
         
-        // Draw button text with proper centering and padding consideration
+        // Draw button text
         fill(0);                                             // Black text
         textAlign(CENTER);                                   // Center text in button
-        textSize(min(buttonWidth * 0.11, 14));              // Adjusted text size for better fit
+        textSize(min(buttonWidth * 0.13, 16));              // Responsive text size
         textStyle(BOLD);                                     // Bold font weight
-        text("Manage Settings", button1X + buttonWidth/2, buttonY + buttonHeight/2 + 5); // Centered text
+        text("Manage Settings", button1X + buttonWidth/2, buttonY + buttonHeight/2 + 6); // Centered text
     }
     
-    // Draw Accept All button (always remains stationary) with proper padding
+    // Draw Accept All button (always remains stationary)
     fill(34, 139, 34);                                      // Forest green background
     noStroke();                                              // No border
     rect(button2X, buttonY, buttonWidth, buttonHeight);     // Button rectangle
     
-    // Draw Accept All button text with proper centering and padding consideration
+    // Draw Accept All button text
     fill(255);                                               // White text for contrast
     textAlign(CENTER);                                       // Center text in button
-    textSize(min(buttonWidth * 0.13, 16));                 // Adjusted text size for better fit
+    textSize(min(buttonWidth * 0.15, 18));                 // Slightly larger text size
     textStyle(BOLD);                                         // Bold font weight
-    text("Accept All", button2X + buttonWidth/2, buttonY + buttonHeight/2 + 5); // Centered text
+    text("Accept All", button2X + buttonWidth/2, buttonY + buttonHeight/2 + 6); // Centered text
     
     // Update and render the escaped button if it exists
     if (freeButton) {
@@ -253,21 +244,21 @@ function updateFreeButton(btn) {
     btn.x += btn.vx;
     btn.y += btn.vy;
     
-    // Improved edge handling with energy conservation
-    let margin = btn.width / 2;
-    if (btn.x - margin <= 0) {
-        btn.x = margin;
+    // FIXED: Allow button center to reach screen edges (no margin restriction)
+    // The button can now use the full screen space
+    if (btn.x <= btn.width/2) {
+        btn.x = btn.width/2;
         btn.vx = abs(btn.vx) * 0.7; // Bounce with energy loss
-    } else if (btn.x + margin >= width) {
-        btn.x = width - margin;
+    } else if (btn.x >= width - btn.width/2) {
+        btn.x = width - btn.width/2;
         btn.vx = -abs(btn.vx) * 0.7;
     }
     
-    if (btn.y - margin <= 0) {
-        btn.y = margin;
+    if (btn.y <= btn.height/2) {
+        btn.y = btn.height/2;
         btn.vy = abs(btn.vy) * 0.7;
-    } else if (btn.y + margin >= height) {
-        btn.y = height - margin;
+    } else if (btn.y >= height - btn.height/2) {
+        btn.y = height - btn.height/2;
         btn.vy = -abs(btn.vy) * 0.7;
     }
     
@@ -302,10 +293,10 @@ function drawFreeButton(btn) {
     noStroke();                                              // No border outline
     rect(btn.x - btn.width/2, btn.y - btn.height/2, btn.width, btn.height); // Centered rectangle
     
-    // Draw button text with proper sizing and centering
+    // Draw button text with consistent sizing
     fill(0);                                                 // Black text color
     textAlign(CENTER);                                       // Center text alignment
-    textSize(min(btn.width * 0.11, 14));                   // Consistent text size with static button
+    textSize(14);                                           // Same fixed text size
     textStyle(BOLD);                                         // Bold font weight
     text("Manage Settings", btn.x, btn.y + 5);              // Draw text at button center with vertical offset
 }
@@ -396,9 +387,9 @@ function mousePressed() {
     let bannerX = (width - bannerWidth) / 2;
     let bannerY = (height - bannerHeight) / 2;
     let padding = bannerWidth * 0.08;
-    let titleSize = min(width * 0.028, 24);  // Updated to match draw function
+    let titleSize = min(width * 0.04, 32);
     let titleText = "WE USE COOKIES TO IMPROVE YOUR EXPERIENCE!";
-    let titleLines = wrapText(titleText, bannerWidth - padding * 2, titleSize);
+    let titleLines = ["WE USE COOKIES TO", "IMPROVE YOUR EXPERIENCE!"]; // Force exactly 2 lines
     let titleHeight = titleLines.length * titleSize * 1.2;
     let textAreaY = bannerY + padding + titleSize + titleHeight + 10;
     let buttonHeight = max(40, bannerHeight * 0.12);
@@ -413,7 +404,7 @@ function mousePressed() {
     }
     
     // Calculate button positions for click detection
-    let buttonWidth = bannerWidth * 0.35;                   // Updated to match draw function
+    let buttonWidth = bannerWidth * 0.3;
     let buttonSpacing = 20;
     let totalButtonWidth = (buttonWidth * 2) + buttonSpacing;
     let button1X = bannerX + (bannerWidth - totalButtonWidth) / 2;
@@ -421,7 +412,7 @@ function mousePressed() {
     let buttonY = bannerY + bannerHeight - buttonHeight - padding;
     
     // Check if Accept All button was clicked
-    if (mouseX >= button2X && mouseX <= button2X + buttonWidth &&
+    if (mouseX >= button2X && mouseX <= button2X + uniformButtonWidth &&
         mouseY >= buttonY && mouseY <= buttonY + buttonHeight) {
         console.log("✅ Cookies accepted!");                // Log acceptance
         window.location.href = "camera.html";               // Navigate to camera page
