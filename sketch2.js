@@ -1,6 +1,6 @@
 // WEB COOKIES ART PROJECT - P5.JS
 // Original concept and design by Petra Helebrantová
-// Created: September 13, 2025
+// Created: September 15, 2025
 
 // AI ASSISTANCE ACKNOWLEDGMENT:
 // ChatGPT (OpenAI) and Claude AI (Anthropic) were used between 09/06/2025 and 09/15/2025 to help with:
