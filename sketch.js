@@ -8,12 +8,19 @@
 // - Proper source citation formatting
 // - Code organization suggestions
 // - Implementation assistance for interactive cookie modal behavior
-// - Physics-based button escape mechanics
+// - Physics-based button escape mechanics (ORIGINAL CONCEPT BY STUDENT)
 // - Scrollable text area functionality
 // - Responsive layout calculations
 // - Mouse interaction and drag scrolling features
+// - Button styling consistency and content-based sizing
 // The core creative vision, artistic concept, and overall design 
 // were developed independently by the student.
+// 
+// STUDENT'S ORIGINAL CREATIVE IDEAS:
+// - Making the "Manage Settings" button disappear and move freely to escape the mouse cursor
+// - The concept of an unclickable/evasive button as artistic commentary on dark patterns
+// - Physics-based mouse avoidance behavior for escaped button
+// AI provided technical implementation assistance for these creative concepts.
 
 // P5.JS LIBRARY:
 // This project uses the p5.js library (https://p5js.org/)
@@ -148,63 +155,98 @@ function draw() {
         rect(scrollBarX, thumbY, 8, thumbHeight);           // Thumb rectangle
     }
     
-    // Calculate button layout (two centered buttons)
-    let buttonWidth = bannerWidth * 0.3;                    // Each button: 30% of banner width
+    // CALCULATE BUTTON WIDTHS BASED ON TEXT CONTENT (RESPONSIVE FOR ALL SCREEN SIZES)
+    let buttonPadding = 20;                                  // Fixed padding in pixels
     let buttonSpacing = 20;                                  // Fixed 20px gap between buttons
-    let totalButtonWidth = (buttonWidth * 2) + buttonSpacing; // Total width of button group
-    let button1X = bannerX + (bannerWidth - totalButtonWidth) / 2; // Center the button group
-    let button2X = button1X + buttonWidth + buttonSpacing;  // Position second button
-    let buttonY = bannerY + bannerHeight - buttonHeight - padding; // Bottom of banner
+    
+    // Set text properties for measurement - ensure minimum readable size
+    textStyle(BOLD);
+    let baseTextSize = min(16, max(12, bannerWidth * 0.025)); // Min 12px, max 16px, responsive
+    textSize(baseTextSize);
+    
+    // Calculate required width for each button based on text content
+    let manageText = "Manage Settings";
+    let acceptText = "Accept All";
+    let manageTextWidth = textWidth(manageText);
+    let acceptTextWidth = textWidth(acceptText);
+    
+    // Button widths = text width + padding on both sides
+    let button1Width = manageTextWidth + (buttonPadding * 2);
+    let button2Width = acceptTextWidth + (buttonPadding * 2);
+    
+    // Ensure buttons aren't too narrow (minimum width) and fit in banner
+    let minButtonWidth = 80;                                 // Reduced minimum for small screens
+    let maxButtonWidth = (bannerWidth - buttonSpacing - (padding * 2)) / 2; // Max width to fit in banner
+    button1Width = constrain(button1Width, minButtonWidth, maxButtonWidth);
+    button2Width = constrain(button2Width, minButtonWidth, maxButtonWidth);
+    
+    // If buttons don't fit with current text size, reduce text size
+    let totalNeededWidth = button1Width + button2Width + buttonSpacing;
+    if (totalNeededWidth > bannerWidth - (padding * 2)) {
+        // Recalculate with smaller text size
+        while (baseTextSize > 8 && totalNeededWidth > bannerWidth - (padding * 2)) {
+            baseTextSize -= 1;
+            textSize(baseTextSize);
+            manageTextWidth = textWidth(manageText);
+            acceptTextWidth = textWidth(acceptText);
+            button1Width = constrain(manageTextWidth + (buttonPadding * 2), minButtonWidth, maxButtonWidth);
+            button2Width = constrain(acceptTextWidth + (buttonPadding * 2), minButtonWidth, maxButtonWidth);
+            totalNeededWidth = button1Width + button2Width + buttonSpacing;
+        }
+    }
+    
+    // Calculate button positions - center the button group
+    let totalButtonWidth = button1Width + button2Width + buttonSpacing;
+    let button1X = bannerX + (bannerWidth - totalButtonWidth) / 2;
+    let button2X = button1X + button1Width + buttonSpacing;
+    let buttonY = bannerY + bannerHeight - buttonHeight - padding;
     
     // Check mouse proximity to original manage settings button for escape behavior
-    let distanceToOriginalManage = dist(mouseX, mouseY, button1X + buttonWidth/2, buttonY + buttonHeight/2);
+    let distanceToOriginalManage = dist(mouseX, mouseY, button1X + button1Width/2, buttonY + buttonHeight/2);
     let escapeDistance = 100;                                // Distance threshold for escape trigger
     
     // Trigger button escape animation when mouse approaches
     if (distanceToOriginalManage < escapeDistance && showOriginalManage && !freeButton) {
         // Create escaped button object with initial physics properties
         freeButton = {
-            x: button1X + buttonWidth/2,                    // Start at original button center X
+            x: button1X + button1Width/2,                   // Start at original button center X
             y: buttonY + buttonHeight/2,                     // Start at original button center Y
-            width: buttonWidth,                              // Maintain original width
+            width: button1Width,                             // Use actual calculated width
             height: buttonHeight,                            // Maintain original height
             vx: random(-15, 15),                            // Random horizontal velocity
             vy: random(-15, 15),                            // Random vertical velocity
-            targetX: random(buttonWidth, width - buttonWidth), // Random target X (unused)
+            targetX: random(button1Width, width - button1Width), // Random target X (unused)
             targetY: random(buttonHeight, height - buttonHeight) // Random target Y (unused)
         };
         showOriginalManage = false;                          // Hide original static button
         console.log("Manage Settings button escaped!");     // Log escape event
     }
     
-    // CONSISTENT BUTTON STYLING - Calculate uniform button text size
-    let buttonTextSize = min(buttonWidth * 0.13, 16);       // Consistent text size for both buttons
-    
     // Draw original Manage Settings button (when not escaped)
     if (showOriginalManage) {
         fill(220);                                           // Light gray background
         noStroke();                                          // No border
-        rect(button1X, buttonY, buttonWidth, buttonHeight); // Button rectangle
+        rect(button1X, buttonY, button1Width, buttonHeight); // Button rectangle with content-based width
         
-        // Draw button text with consistent styling
+        // Draw button text with proper padding
         fill(0);                                             // Black text
         textAlign(CENTER);                                   // Center text in button
-        textSize(buttonTextSize);                           // Use consistent text size
+        textSize(baseTextSize);                             // Use base text size
         textStyle(BOLD);                                     // Bold font weight
-        text("Manage Settings", button1X + buttonWidth/2, buttonY + buttonHeight/2 + 6); // Centered text
+        text(manageText, button1X + button1Width/2, buttonY + buttonHeight/2 + 6); // Centered text
     }
     
-    // Draw Accept All button with matching styling
+    // Draw Accept All button with content-based width
     fill(34, 139, 34);                                      // Forest green background
     noStroke();                                              // No border
-    rect(button2X, buttonY, buttonWidth, buttonHeight);     // Button rectangle
+    rect(button2X, buttonY, button2Width, buttonHeight);    // Button rectangle with content-based width
     
-    // Draw Accept All button text with consistent styling
+    // Draw Accept All button text
     fill(255);                                               // White text for contrast
     textAlign(CENTER);                                       // Center text in button
-    textSize(buttonTextSize);                               // Same text size as other button
+    textSize(baseTextSize);                                 // Same text size
     textStyle(BOLD);                                         // Bold font weight
-    text("Accept All", button2X + buttonWidth/2, buttonY + buttonHeight/2 + 6); // Centered text
+    text(acceptText, button2X + button2Width/2, buttonY + buttonHeight/2 + 6); // Centered text
     
     // Update and render the escaped button if it exists
     if (freeButton) {
@@ -288,23 +330,38 @@ function updateFreeButton(btn) {
 
 /**
  * Render the escaped Manage Settings button at its current physics-driven position
+ * Uses IDENTICAL styling to the static button for perfect visual consistency
  * @param {Object} btn - Button object containing current position and dimension data
  */
 function drawFreeButton(btn) {
     // Draw button background rectangle centered at current position
-    fill(220);                                               // Light gray background (matches original)
+    fill(220);                                               // Light gray background (matches original exactly)
     noStroke();                                              // No border outline
     rect(btn.x - btn.width/2, btn.y - btn.height/2, btn.width, btn.height); // Centered rectangle
     
-    // CONSISTENT ESCAPED BUTTON STYLING
-    let buttonTextSize = min(btn.width * 0.13, 16);         // Use same calculation as static buttons
+    // IDENTICAL STYLING TO STATIC BUTTON - calculate text size the same way
+    let buttonPadding = 20;                                  // Same fixed padding as static buttons
+    textStyle(BOLD);                                         // Set bold for measurement
+    let baseTextSize = min(16, max(12, btn.width * 0.15));   // Responsive text size based on button width
+    textSize(baseTextSize);
     
-    // Draw button text with consistent sizing
-    fill(0);                                                 // Black text color
+    let manageText = "Manage Settings";
+    let manageTextWidth = textWidth(manageText);
+    let maxTextWidth = btn.width - (buttonPadding * 2);
+    
+    // Reduce text size if needed to fit with proper padding (same as static button logic)
+    while (manageTextWidth > maxTextWidth && baseTextSize > 8) {
+        baseTextSize -= 1;
+        textSize(baseTextSize);
+        manageTextWidth = textWidth(manageText);
+    }
+    
+    // Draw button text with identical styling to static button
+    fill(0);                                                 // Black text color (matches static button)
     textAlign(CENTER);                                       // Center text alignment
-    textSize(buttonTextSize);                               // Same text size as static buttons
+    textSize(baseTextSize);                                 // Use calculated text size
     textStyle(BOLD);                                         // Bold font weight
-    text("Manage Settings", btn.x, btn.y + 6);              // Draw text at button center with vertical offset
+    text(manageText, btn.x, btn.y + 6);                     // Draw text at button center with same vertical offset
 }
 
 // ==================== TEXT PROCESSING UTILITIES ====================
@@ -464,16 +521,52 @@ function mousePressed() {
         return;                                              // Exit early to prevent button processing
     }
     
-    // Calculate button positions for click detection
-    let buttonWidth = bannerWidth * 0.3;
-    let buttonSpacing = 20;
-    let totalButtonWidth = (buttonWidth * 2) + buttonSpacing;
+    // RECALCULATE BUTTON POSITIONS FOR CLICK DETECTION (must match drawing code exactly)
+    let buttonPadding = 20;                                  // Same as drawing code
+    let buttonSpacing = 20;                                  // Same as drawing code
+    
+    // Set text properties for measurement (same as drawing code)
+    textStyle(BOLD);
+    let baseTextSize = min(16, max(12, bannerWidth * 0.025)); // Same responsive calculation
+    textSize(baseTextSize);
+    
+    // Calculate button widths (same as drawing code)
+    let manageText = "Manage Settings";
+    let acceptText = "Accept All";
+    let manageTextWidth = textWidth(manageText);
+    let acceptTextWidth = textWidth(acceptText);
+    
+    let button1Width = manageTextWidth + (buttonPadding * 2);
+    let button2Width = acceptTextWidth + (buttonPadding * 2);
+    
+    // Apply same constraints as drawing code
+    let minButtonWidth = 80;
+    let maxButtonWidth = (bannerWidth - buttonSpacing - (padding * 2)) / 2;
+    button1Width = constrain(button1Width, minButtonWidth, maxButtonWidth);
+    button2Width = constrain(button2Width, minButtonWidth, maxButtonWidth);
+    
+    // Apply same text size reduction logic if needed
+    let totalNeededWidth = button1Width + button2Width + buttonSpacing;
+    if (totalNeededWidth > bannerWidth - (padding * 2)) {
+        while (baseTextSize > 8 && totalNeededWidth > bannerWidth - (padding * 2)) {
+            baseTextSize -= 1;
+            textSize(baseTextSize);
+            manageTextWidth = textWidth(manageText);
+            acceptTextWidth = textWidth(acceptText);
+            button1Width = constrain(manageTextWidth + (buttonPadding * 2), minButtonWidth, maxButtonWidth);
+            button2Width = constrain(acceptTextWidth + (buttonPadding * 2), minButtonWidth, maxButtonWidth);
+            totalNeededWidth = button1Width + button2Width + buttonSpacing;
+        }
+    }
+    
+    // Calculate button positions (same as drawing code)
+    let totalButtonWidth = button1Width + button2Width + buttonSpacing;
     let button1X = bannerX + (bannerWidth - totalButtonWidth) / 2;
-    let button2X = button1X + buttonWidth + buttonSpacing;
+    let button2X = button1X + button1Width + buttonSpacing;
     let buttonY = bannerY + bannerHeight - buttonHeight - padding;
     
     // Check if Accept All button was clicked
-    if (mouseX >= button2X && mouseX <= button2X + buttonWidth &&
+    if (mouseX >= button2X && mouseX <= button2X + button2Width &&
         mouseY >= buttonY && mouseY <= buttonY + buttonHeight) {
         console.log("✅ Cookies accepted!");                // Log acceptance
         window.location.href = "camera.html";               // Navigate to camera page
