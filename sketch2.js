@@ -273,8 +273,8 @@ function drawSurveillanceText() {
     
     // Update message timer and advance to next message when ready
     messageTimer++; // Increment timer each frame
-    // After 120 frames (2 seconds at 60fps) and if more messages remain
-    if (messageTimer > 120 && currentMessageIndex < surveillanceMessages.length - 1) {
+    // Changed from 120 frames (2 seconds) to 300 frames (5 seconds at 60fps)
+    if (messageTimer > 300 && currentMessageIndex < surveillanceMessages.length - 1) {
         currentMessageIndex++; // Advance to next message
         messageTimer = 0; // Reset timer for next message
     }
