@@ -200,25 +200,44 @@ function draw() {
     let button2X = button1X + button1Width + buttonSpacing;
     let buttonY = bannerY + bannerHeight - buttonHeight - padding;
     
-    // Check mouse proximity to original manage settings button for escape behavior
-    let distanceToOriginalManage = dist(mouseX, mouseY, button1X + button1Width/2, buttonY + buttonHeight/2);
-    let escapeDistance = 100;                                // Distance threshold for escape trigger
+    // ==================== MOUSE AVOIDANCE MECHANISM - ESCAPE TRIGGER ====================
     
-    // Trigger button escape animation when mouse approaches
+    // MOUSE PROXIMITY DETECTION FOR BUTTON ESCAPE BEHAVIOR
+    // Calculate straight-line distance between mouse cursor and center of original manage button
+    let distanceToOriginalManage = dist(mouseX, mouseY, button1X + button1Width/2, buttonY + buttonHeight/2);
+    let escapeDistance = 100;                                // Pixel radius around button that triggers escape
+                                                            // When mouse enters this invisible circle, button "panics"
+    
+    // ESCAPE TRIGGER CONDITIONS - All must be true for button to escape:
+    // 1. Mouse is within escape radius (distanceToOriginalManage < escapeDistance)
+    // 2. Original button is still visible (showOriginalManage == true)
+    // 3. No escaped button already exists (!freeButton == null)
     if (distanceToOriginalManage < escapeDistance && showOriginalManage && !freeButton) {
-        // Create escaped button object with initial physics properties
+        // CREATE ESCAPED BUTTON PHYSICS OBJECT
+        // Transform static button into dynamic physics-based entity
         freeButton = {
-            x: button1X + button1Width/2,                   // Start at original button center X
-            y: buttonY + buttonHeight/2,                     // Start at original button center Y
-            width: button1Width,                             // Use actual calculated width
-            height: buttonHeight,                            // Maintain original height
-            vx: random(-15, 15),                            // Random horizontal velocity
-            vy: random(-15, 15),                            // Random vertical velocity
-            targetX: random(button1Width, width - button1Width), // Random target X (unused)
-            targetY: random(buttonHeight, height - buttonHeight) // Random target Y (unused)
+            // INITIAL POSITION - Start exactly where the original button was
+            x: button1X + button1Width/2,                   // Center X coordinate of original button
+            y: buttonY + buttonHeight/2,                     // Center Y coordinate of original button
+            
+            // VISUAL PROPERTIES - Maintain exact same appearance as original
+            width: button1Width,                             // Preserve calculated responsive width
+            height: buttonHeight,                            // Preserve calculated responsive height
+            
+            // INITIAL VELOCITY - Random "panic" movement away from mouse
+            vx: random(-15, 15),                            // Random horizontal velocity (-15 to +15 pixels/frame)
+            vy: random(-15, 15),                            // Random vertical velocity (-15 to +15 pixels/frame)
+                                                            // This creates unpredictable initial movement direction
+            
+            // TARGET COORDINATES (currently unused but available for future AI behavior)
+            targetX: random(button1Width, width - button1Width), // Random safe X position on screen
+            targetY: random(buttonHeight, height - buttonHeight) // Random safe Y position on screen
         };
-        showOriginalManage = false;                          // Hide original static button
-        console.log("Manage Settings button escaped!");     // Log escape event
+        
+        // BUTTON STATE TRANSITION
+        showOriginalManage = false;                          // Hide static button (visual switch)
+                                                            // From this point, only the physics button renders
+        console.log("Manage Settings button escaped!");     // Debug log for escape event
     }
     
     // Draw original Manage Settings button (when not escaped)
@@ -254,76 +273,110 @@ function draw() {
     }
 }
 
-// ==================== PHYSICS AND ANIMATION ====================
+// ==================== ADVANCED MOUSE AVOIDANCE PHYSICS ENGINE ====================
 
 /**
- * Physics and behavior system for the escaped Manage Settings button
- * Implements mouse avoidance, screen boundary collision, and movement damping
+ * COMPREHENSIVE PHYSICS AND BEHAVIOR SYSTEM FOR ESCAPED BUTTON
+ * This function runs every frame to update the escaped button's position and behavior
+ * Implements realistic "fear" response with exponential force curves and natural movement
  * @param {Object} btn - Button object containing position, velocity, and dimension data
  */
 function updateFreeButton(btn) {
-    let distanceToMouse = dist(mouseX, mouseY, btn.x, btn.y);
-    let fleeDistance = 250; // Increased detection range
+    // STEP 1: CALCULATE MOUSE THREAT LEVEL
+    let distanceToMouse = dist(mouseX, mouseY, btn.x, btn.y);  // Euclidean distance to mouse cursor
+    let fleeDistance = 250;                                    // Detection radius - button "sees" mouse from this far
+                                                              // Increased from original 100px for more dramatic effect
     
+    // STEP 2: MOUSE AVOIDANCE FORCE CALCULATION
+    // Only apply avoidance force if mouse is within detection range AND we have valid distance
     if (distanceToMouse < fleeDistance && distanceToMouse > 0) {
-        // Calculate normalized direction vector (more precise)
-        let dirX = (btn.x - mouseX) / distanceToMouse;
-        let dirY = (btn.y - mouseY) / distanceToMouse;
         
-        // Non-linear force curve for more dramatic effect
-        let normalizedDist = distanceToMouse / fleeDistance;
-        let forceMultiplier = pow(1 - normalizedDist, 2.5); // Exponential falloff
-        let force = forceMultiplier * 15; // Base force strength
+        // SUB-STEP 2A: CALCULATE NORMALIZED DIRECTION VECTOR (precise math)
+        // This creates a unit vector pointing directly away from the mouse
+        let dirX = (btn.x - mouseX) / distanceToMouse;      // X component of flee direction (-1 to +1)
+        let dirY = (btn.y - mouseY) / distanceToMouse;      // Y component of flee direction (-1 to +1)
+        // Division by distance normalizes the vector to length 1.0 for consistent force application
         
-        // Apply force in the flee direction
-        btn.vx += dirX * force;
-        btn.vy += dirY * force;
+        // SUB-STEP 2B: NON-LINEAR FORCE CURVE FOR REALISTIC PANIC RESPONSE
+        let normalizedDist = distanceToMouse / fleeDistance; // Convert distance to 0-1 range
+                                                            // 0 = mouse directly on button, 1 = mouse at edge of detection
+        let forceMultiplier = pow(1 - normalizedDist, 2.5); // EXPONENTIAL PANIC CURVE
+        // pow(x, 2.5) creates dramatic force increase as mouse gets closer:
+        // - At distance 250px: force = pow(0, 2.5) = 0 (no panic)
+        // - At distance 125px: force = pow(0.5, 2.5) = ~0.18 (mild concern)
+        // - At distance 50px:  force = pow(0.8, 2.5) = ~0.57 (moderate fear)
+        // - At distance 10px:  force = pow(0.96, 2.5) = ~0.90 (extreme panic!)
         
-        // Add slight randomness for more natural movement
-        btn.vx += random(-1, 1);
-        btn.vy += random(-1, 1);
+        let force = forceMultiplier * 15;                   // Base force strength multiplier
+                                                            // 15 is the maximum pixels/frame acceleration
+        
+        // SUB-STEP 2C: APPLY DIRECTIONAL FORCE TO VELOCITY
+        btn.vx += dirX * force;                             // Add horizontal escape acceleration
+        btn.vy += dirY * force;                             // Add vertical escape acceleration
+        // This creates smooth acceleration away from mouse, not instant teleportation
+        
+        // SUB-STEP 2D: ADD ORGANIC RANDOMNESS (prevents robotic movement)
+        btn.vx += random(-1, 1);                            // Tiny random horizontal jitter
+        btn.vy += random(-1, 1);                            // Tiny random vertical jitter
+        // This simulates "nervous" or "panicked" movement - not perfectly calculated escape
     }
     
-    // Smooth position update with interpolation
-    btn.x += btn.vx;
-    btn.y += btn.vy;
+    // STEP 3: PHYSICS INTEGRATION (velocity -> position)
+    btn.x += btn.vx;                                        // Apply horizontal velocity to X position
+    btn.y += btn.vy;                                        // Apply vertical velocity to Y position
+    // This is Euler integration: position = position + velocity * time
+    // (time = 1 frame, so we omit it)
     
-    // FIXED: Allow button center to reach screen edges (no margin restriction)
-    // The button can now use the full screen space
-    if (btn.x <= btn.width/2) {
-        btn.x = btn.width/2;
-        btn.vx = abs(btn.vx) * 0.7; // Bounce with energy loss
-    } else if (btn.x >= width - btn.width/2) {
-        btn.x = width - btn.width/2;
-        btn.vx = -abs(btn.vx) * 0.7;
+    // STEP 4: BOUNDARY COLLISION DETECTION AND RESPONSE
+    // Prevent button from escaping the visible screen area with realistic bouncing
+    
+    // LEFT AND RIGHT WALL COLLISIONS
+    if (btn.x <= btn.width/2) {                            // Hit left edge of screen
+        btn.x = btn.width/2;                               // Snap back to edge (prevent clipping)
+        btn.vx = abs(btn.vx) * 0.7;                       // Reverse horizontal velocity with energy loss
+        // abs() ensures we bounce rightward, 0.7 simulates energy loss in "collision"
+    } else if (btn.x >= width - btn.width/2) {             // Hit right edge of screen
+        btn.x = width - btn.width/2;                       // Snap back to edge
+        btn.vx = -abs(btn.vx) * 0.7;                      // Reverse horizontal velocity (bounce leftward)
     }
     
-    if (btn.y <= btn.height/2) {
-        btn.y = btn.height/2;
-        btn.vy = abs(btn.vy) * 0.7;
-    } else if (btn.y >= height - btn.height/2) {
-        btn.y = height - btn.height/2;
-        btn.vy = -abs(btn.vy) * 0.7;
+    // TOP AND BOTTOM WALL COLLISIONS
+    if (btn.y <= btn.height/2) {                          // Hit top edge of screen
+        btn.y = btn.height/2;                             // Snap back to edge
+        btn.vy = abs(btn.vy) * 0.7;                       // Reverse vertical velocity (bounce downward)
+    } else if (btn.y >= height - btn.height/2) {           // Hit bottom edge of screen
+        btn.y = height - btn.height/2;                     // Snap back to edge
+        btn.vy = -abs(btn.vy) * 0.7;                      // Reverse vertical velocity (bounce upward)
     }
     
-    // Progressive damping - faster when moving fast, slower when slow
-    let currentSpeed = sqrt(btn.vx * btn.vx + btn.vy * btn.vy);
-    let dampingFactor = map(currentSpeed, 0, 30, 0.99, 0.94);
-    btn.vx *= dampingFactor;
-    btn.vy *= dampingFactor;
+    // STEP 5: PROGRESSIVE DAMPING SYSTEM (realistic physics simulation)
+    let currentSpeed = sqrt(btn.vx * btn.vx + btn.vy * btn.vy); // Calculate total velocity magnitude
+    // sqrt(vx² + vy²) gives us the speed regardless of direction
     
-    // Dynamic speed limiting
-    let maxSpeed = 30;
-    if (currentSpeed > maxSpeed) {
-        let scale = maxSpeed / currentSpeed;
-        btn.vx *= scale;
-        btn.vy *= scale;
+    let dampingFactor = map(currentSpeed, 0, 30, 0.99, 0.94);   // Variable damping based on speed
+    // map() creates adaptive friction:
+    // - Slow movement (0-10 px/frame): damping = 0.99 (keeps slow movements alive longer)
+    // - Fast movement (20-30 px/frame): damping = 0.94 (reduces high speeds quickly)
+    // This prevents both jittery stops and runaway acceleration
+    
+    btn.vx *= dampingFactor;                               // Apply horizontal damping
+    btn.vy *= dampingFactor;                               // Apply vertical damping
+    // Each frame, velocity is reduced by the damping factor, simulating air resistance
+    
+    // STEP 6: SPEED LIMITING (prevent impossible physics)
+    let maxSpeed = 30;                                     // Maximum pixels per frame
+    if (currentSpeed > maxSpeed) {                         // If moving too fast
+        let scale = maxSpeed / currentSpeed;               // Calculate scaling factor
+        btn.vx *= scale;                                   // Scale velocity back to maximum
+        btn.vy *= scale;                                   // Scale velocity back to maximum
+        // This maintains direction but caps speed for visual clarity
     }
     
-    // Stop tiny movements to prevent jitter
-    if (currentSpeed < 0.1) {
-        btn.vx = 0;
-        btn.vy = 0;
+    // STEP 7: MICRO-MOVEMENT ELIMINATION (prevent visual jitter)
+    if (currentSpeed < 0.1) {                             // If barely moving
+        btn.vx = 0;                                        // Stop horizontal movement completely
+        btn.vy = 0;                                        // Stop vertical movement completely
+        // This prevents tiny sub-pixel movements that cause visual jitter
     }
 }
 
