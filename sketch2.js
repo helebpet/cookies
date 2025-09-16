@@ -35,19 +35,22 @@ let startTime; // Variable to store the millisecond timestamp when sketch begins
 
 // Array of fake "surveillance" messages to display sequentially for artistic effect
 let surveillanceMessages = [
-    "[DETECTED] mouse moved to the left",      // First message shown
-    "[LOG] user is getting annoyed",           // Second message (builds tension)
-    "[ALERT] location shared with our boss",   // Third message (escalates concern)
-    "[STATUS] user blinked 20 times",          // Fourth message (shows tracking)
-    "[ALERT] embarrassing photo sent to your mum!", // Fifth message (personal threat)
-    "[MESSAGE] you are the product",           // Sixth message (reveals corporate surveillance)
-    "[MESSAGE] click anywhere on the screen to get out of here" // Final call-to-action
+    "[DETECTED] mouse moved",                  // First message - triggers on mouse movement
+    "[MESSAGE] you are the product",           // Second message 
+    "[ALERT] location shared with your boss",  // Third message
+    "[LOG] user is getting annoyed",           // Fourth message
+    "[STATUS] user blinked 20 times",         // Fifth message
+    "[MESSAGE] click anywhere on the screen to get out of here", // Sixth message - waits for click
+    "[ALERT] embarrassing photo sent to your mum!" // Final message - shows after click
 ];
 
-let currentMessageIndex = 0; // Tracks which surveillance message is currently being displayed (0-based index)
-let messageTimer = 0; // Counter that increments each frame to control message timing (resets after each new message)
+let currentMessageIndex = -1; // Start at -1 so no messages show initially
+let messageTimer = 0; // Counter that increments each frame to control message timing
 let blinkTimer = 0; // Counter for controlling the automatic blinking animation of the interactive face
 let isBlinking = false; // Boolean flag to track whether the face is currently in blink state
+let mouseHasMoved = false; // Track if mouse has moved to trigger first message
+let waitingForClick = false; // Track if we're waiting for user to click
+let userHasClicked = false; // Track if user has clicked after the "click to get out" message
 
 // Screenshot functionality variables
 let screenshots = []; // Array to store screenshot objects (each contains image and timestamp)
@@ -263,21 +266,33 @@ function drawSurveillanceText() {
     // Draw surveillance messages progressively
     textSize(14); // Smaller text for messages
     let yPos = padding + cameraHeight + 90; // Starting y-position for messages
-    // Loop through messages and only show those that should be visible
-    for (let i = 0; i < surveillanceMessages.length; i++) {
-        if (i <= currentMessageIndex) { // Only show messages up to current index
-            // Draw each message with vertical spacing
-            text(surveillanceMessages[i], separatorX + padding, yPos + i * 25);
-        }
+    
+    // Only show messages up to current index
+    for (let i = 0; i <= currentMessageIndex && i < surveillanceMessages.length; i++) {
+        text(surveillanceMessages[i], separatorX + padding, yPos + i * 25);
     }
     
-    // Update message timer and advance to next message when ready
-    messageTimer++; // Increment timer each frame
-    // Changed from 120 frames (2 seconds) to 300 frames (5 seconds at 60fps)
-    if (messageTimer > 300 && currentMessageIndex < surveillanceMessages.length - 1) {
-        currentMessageIndex++; // Advance to next message
-        messageTimer = 0; // Reset timer for next message
+    // Handle message progression logic
+    if (mouseHasMoved && currentMessageIndex < 0) {
+        // Start showing messages when mouse moves
+        currentMessageIndex = 0;
+        messageTimer = 0;
+    } else if (currentMessageIndex >= 0 && currentMessageIndex < 5) {
+        // Progress through first 5 messages normally (indices 0-4)
+        messageTimer++;
+        if (messageTimer > 300) { // 5 seconds delay
+            currentMessageIndex++;
+            messageTimer = 0;
+        }
+    } else if (currentMessageIndex === 5) {
+        // Show "click anywhere" message and wait for click
+        waitingForClick = true;
+        if (userHasClicked) {
+            currentMessageIndex++;
+            waitingForClick = false;
+        }
     }
+    // Message index 6 (final message) stays visible once shown
 }
 
 function drawTimeDisplay() {
@@ -359,8 +374,23 @@ function drawInteractiveFace() {
 
 // ==================== EVENT HANDLERS ====================
 
+function mouseMoved() {
+    // Trigger first message when mouse moves
+    if (!mouseHasMoved) {
+        mouseHasMoved = true;
+        console.log("Mouse movement detected - surveillance initiated");
+    }
+}
+
 function mousePressed() {
     console.log("Screen clicked!"); // Log interaction for debugging
+    
+    if (waitingForClick) {
+        // User clicked after "click to get out" message
+        userHasClicked = true;
+        console.log("User tried to escape - showing final message");
+    }
+    
     captureScreenshot(); // Take screenshot when user clicks
 }
 
